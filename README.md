@@ -45,6 +45,6 @@ Here's some further discussion of this problem from much more recent days:
 
 <https://stackoverflow.com/questions/30344715/automatically-delegating-all-methods-of-a-java-class>
 
-The name "DuckRabbit" has been chosen for this library in reference to Duck Typing,
+The name "DuckRabbit" has been chosen for this library in reference to [Duck Typing](https://en.wikipedia.org/wiki/Duck_typing),
 which is one of the not-in-Java features being simulated by this code.
 
