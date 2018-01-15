@@ -37,7 +37,7 @@ the leaks. With the DynamicDelegator, this becomes near trivial:
 I would have assumed that by 2018, some kind of automatic delegation would
 have been added to the Java language or standard library, to facilitate this sort of thing.
 
-Apparently, there is, and it's called "switching from Java to Groovy". By maybe the world
+Apparently, there is, and it's called "switching from Java to Groovy". But maybe the world
 still needs all-java solutions to this problem. I'm sure this code has been
 written 1000's of times. This is one of them.
 
