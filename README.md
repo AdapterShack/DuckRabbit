@@ -100,7 +100,7 @@ at least as far as the readLine() method is concerned..
 I would have assumed that by 2018, some kind of automatic delegation would
 have been added to the Java language or standard library, to facilitate this sort of thing.
 
-Apparently, there is, and it's called "switching from Java to Groovy". So the world
+Apparently, there is, and it's called "switching from Java to Groovy". But maybe the world
 still needs all-java solutions to this problem. I'm sure this code has been
 written 1000's of times. This is one of them.
 
@@ -108,6 +108,6 @@ Here's some further discussion of this problem from much more recent days:
 
 <https://stackoverflow.com/questions/30344715/automatically-delegating-all-methods-of-a-java-class>
 
-The name "DuckRabbit" has been chosen for this library in reference to Duck Typing,
+The name "DuckRabbit" has been chosen for this library in reference to [Duck Typing](https://en.wikipedia.org/wiki/Duck_typing),
 which is one of the not-in-Java features being simulated by this code.
 
