@@ -3,6 +3,7 @@ package com.adaptershack.duckrabbit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.time.LocalDate;
 
@@ -157,7 +158,75 @@ public class DuckTest {
 	
 	}
 	
+	@Test
+	public void testOurWay2() {
+		
+		DuckImpl impl = new DuckImpl();
+		
+		Duck daffy = DynamicDelegator.getProxy(Duck.class,
+			new Object() {
 
+				@SuppressWarnings("unused")
+				public String speak() {
+					return "You're despicable";
+				}
+				
+				@SuppressWarnings("unused")
+				public boolean canFly() {
+					// date when that darn fool duck forgot he could fly
+					return LocalDate.now().isBefore( LocalDate.of(1946,1,1));
+				}
+			
+			}, impl);
+
+		// this will call our own implementation
+		assertEquals("You're despicable", daffy.speak());
+		assertFalse(daffy.canFly());
+		
+		// these will all tunnel through to the backing object
+		assertTrue(daffy.canSwim());
+		assertTrue(daffy.canWalk());
+		assertTrue(daffy.inSeason());
+	
+	}
+
+	@Test
+	public void coldDuckTest() {
+		
+		Duck daffy = new DynamicDelegator<Duck>(Duck.class) {
+
+			// implement only the 2 methods you 
+			// need to override, forget the rest
+			
+			@SuppressWarnings("unused")
+			public String speak() {
+				return "You're despicable";
+			}
+			
+			@SuppressWarnings("unused")
+			public boolean canFly() {
+				// date when that darn fool duck forgot he could fly
+				return LocalDate.now().isBefore( LocalDate.of(1946,1,1));
+			}
+			
+		}.getProxy();
+		
+		// this will call our own implementation
+		assertEquals("You're despicable", daffy.speak());
+		assertFalse(daffy.canFly());
+		
+		// these will throw
+		try {
+			assertTrue(daffy.canSwim());
+			assertTrue(daffy.canWalk());
+			assertTrue(daffy.inSeason());
+
+			fail();
+		} catch (Exception e) {
+			// don't say we didn't warn you
+		}
+		
+	}
 	
 	
 }

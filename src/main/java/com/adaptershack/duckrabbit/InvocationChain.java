@@ -110,7 +110,7 @@ public class InvocationChain implements InvocationHandler {
             }
         }
         
-        throw new NoSuchMethodException("couldn't find metho in my chain of respsonsibility: "+method);
+        throw new UnsupportedOperationException("couldn't find metho in my chain of respsonsibility: "+method);
     }
 
     /**

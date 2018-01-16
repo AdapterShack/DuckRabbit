@@ -6,6 +6,9 @@
 
 package com.adaptershack.duckrabbit;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * A class to make it easy to write dynamic proxies that
  * wrap existing classes. Simply write methods that have
@@ -78,7 +81,9 @@ package com.adaptershack.duckrabbit;
 public class DynamicDelegator<T> {
     
     /**
-     * The inner object that is being wrapped by us.
+     * The inner object that is being wrapped by us. This may be null.
+     * Depending on how we were constructed, this object may or may not
+     * actually implement any of the interfaces.
      */
     protected T wrapped;
     
@@ -89,12 +94,85 @@ public class DynamicDelegator<T> {
      * or other methods where you would normally pass "this".
      */
     protected T thisProxy;
-        
-    /** Creates a new instance of GenericWrapper */
-    public DynamicDelegator(T wrapped) {
+
+    /**
+     * Contains any additional interfaces to be implemented
+     * by the proxy in additional to those automatically taken
+     * from the wrapped object or the DynamicDelegator itself.
+     */
+    protected Class<?>[] additionalInterfaces = { };
+    
+    /** Creates a new instance of DynamicDelegator wrapping an object of type T */
+    public DynamicDelegator(T wrapped, Class<?> ... interfaces) {
         this.wrapped = wrapped;
+        additionalInterfaces = interfaces;
     }
 
+    
+    /** Creates a new instance of DynamicDelegator not wrapping any object
+     *  but implementing the specified interface(s).
+     **/
+    public DynamicDelegator(Class<T> mainInterface, Class<?>... extras) {
+    	List<Class<?>> clazzes = new ArrayList<>();
+    	clazzes.add(mainInterface);
+    	clazzes.addAll(clazzes);
+    	this.additionalInterfaces = clazzes.toArray( new Class<?>[clazzes.size()] );
+    }
+
+    /**
+     * Static utility method that takes a given object and uses it to
+     * "implement" all of the interfaces based on method matching.
+     * The object need not be declared to implement any of them.
+     * Unimplemented methods will throw UnsupportedOperationException.
+     * 
+     * @param impl
+     * @param mainInterface
+     * @param extras
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+	public static <T> T getProxy(Object impl, Class<T> mainInterface, Class<?>... extras ) {
+    	InvocationChain chain = new InvocationChain();
+    	chain.add(impl);
+    	chain.addInterface(mainInterface);
+    	chain.addInterfaces(extras);
+    	return (T) chain.newProxyInstance();
+    }
+
+	/**
+     * Static utility method that takes two objects and constructs
+     * a delegation relation between them in order to "implement"
+     * all of the interfaces based on method matching.
+     * The objects need not be declared to implement any of the interfaces.
+     */
+	public static <T> T getProxy(Class<T> mainInterface, Object... delegates ) {
+		return getProxy(mainInterface, null, delegates);
+	}
+	
+	/**
+     * Static utility method that takes any number objects and constructs
+     * a delegation chain along all of them in order to "implement"
+     * all of the interfaces based on method matching.
+     * The objects need not be declared to implement any of the interfaces.
+     * 
+     * @param impl
+     * @param mainInterface
+     * @param extras
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+	public static <T> T getProxy(Class<T> mainInterface, Class<?>[] extras, Object... delegates ) {
+    	InvocationChain chain = new InvocationChain();
+    	for(Object o : delegates) {	
+    		chain.add(o);
+    	}
+    	chain.addInterface(mainInterface);
+    	if(extras != null) {
+    		chain.addInterfaces(extras);
+    	}
+    	return (T) chain.newProxyInstance();
+    }
+    
     
     /**
      * Uses InvocationChain to tie this wrapper and the wrapped object
@@ -103,14 +181,16 @@ public class DynamicDelegator<T> {
      * the wrapped Object, as well as any interfaces returned by the
      * getAdditionalInterfaces method. Any method called on this proxy
      * will be invoked on the wrapper if such a method if found there,
-     * or on thw wrapped object otherwise.
+     * or on the wrapped object otherwise.
      * @see InvocationChain
      */
     @SuppressWarnings("unchecked")
 	public T getProxy() {
         InvocationChain chain = new InvocationChain();
         chain.add(this);
-        chain.add(wrapped);
+        if( wrapped != null) {
+        	chain.add(wrapped);
+        }
         chain.addInterfaces(getAdditionalInterfaces());
         thisProxy = (T) chain.newProxyInstance();
         return thisProxy;
@@ -120,13 +200,12 @@ public class DynamicDelegator<T> {
     
 
     /**
-     * Normally this returns a zero-length array. Override to specify
-     * that the proxies created by this class should implement the
-     * returned interface(s) in addition to any that are implemented
-     * by the wrapper or the wrapped object.
+     * Returns any additional interfaces to be implemented
+     * by the proxy in additional to those automatically taken
+     * from the wrapped object or the DynamicDelegator itself.
      */
      protected Class<?>[] getAdditionalInterfaces() {
-         return new Class<?>[0];
+         return additionalInterfaces;
      }
  
     
