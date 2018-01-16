@@ -14,24 +14,87 @@ the leaks. With the DynamicDelegator, this becomes near trivial:
 
 
 ```java
+	Connection getConnection() {
 
-    Connection getConnection() {
-    
-        Connection c = reallyConnectToDatabase();
-    
-    	  final Throwable stacktrace = new Throwable();
+		Connection c = reallyConnectToDatabase();
 
-        Connection wrapped = DynamicDelegator<Connection>(c) {
-            public void finalize() {
-       	       if(!isClosed()) {
-       		        LOGGER.error("Were you raised in a barn?!!",stacktrace);
-       		    }
-            }
-         }.getProxy();
+		final Throwable stacktrace = new Throwable();
 
-         return wrapped;       
-    }
-    
+		Connection wrapped = new DynamicDelegator<Connection>(c) {
+			public void finalize() throws Exception {
+				if (!c.isClosed()) {
+					LOGGER.error("Were you raised in a barn?!!", stacktrace);
+				}
+			}
+		}.getProxy();
+
+		return wrapped;
+	}
+```
+
+Of course, there's less need to do THIS particular thing anymore.
+
+You can also use this to dynamically create _partial_
+interface implementations. Any methods not implemented will throw runtime exceptions. It's better than
+having to type "throw new UnsupportedOperationException()" a zillion times, right?
+
+```java
+		return new DynamicDelegator<Connection>(Connection.class) {
+			@SuppressWarnings("unused")
+			public boolean isClosed() {
+				return false;
+			}
+			@SuppressWarnings("unused")
+			public Statement createStatement() {
+				return new DynamicDelegator<Statement>(Statement.class) {
+					public boolean execute(String sql) {
+						return true;
+					}
+				}.getProxy();
+			}
+		}.getProxy();
+```
+
+There are also static versions of the getProxy method that take any object:
+
+```java
+	Connection getConnection() {
+
+		Connection c = reallyConnectToDatabase();
+
+		final Throwable stacktrace = new Throwable();
+
+		Connection wrapped = DynamicDelegator.getProxy(
+			Connection.class,
+			new Object() {
+				public void finalize() throws Exception {
+					if (!realConnection.isClosed()) {
+						LOGGER.error("Were you raised in a barn?!!", stacktrace);
+					}
+				}
+			}, 
+			realConnection );
+
+		return wrapped;
+	}
+			
+```
+
+This makes it more obvious what is going on: the anonymous class serving as the second
+argument to getProxy is not, actually, a type of Connection. The created proxy is.
+
+You can use these to make a pre-existing object implement a pre-existing interface that
+happens to match any of its methods. It's harder to think of a useful example for this,
+but imagine for some reason you needed to make a BufferedReader implement DataInput
+at least as far as the readLine() method is concerned..
+
+```java
+
+    BufferedReader br = ...
+
+    DataInput di = DynamicDelegator.getProxy(br, DataInput.class);
+
+    String s = di.readLine();	
 ```
 
 I would have assumed that by 2018, some kind of automatic delegation would
