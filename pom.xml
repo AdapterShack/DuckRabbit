@@ -18,6 +18,22 @@
       <scope>test</scope>
     </dependency>
     </dependencies>
-  
-    
+ 
+  <distributionManagement>
+    <repository>
+      <id>adaptershack-ssh</id>
+      <url>scp://deployer@repo.adaptershack.com/home/deployer/maven</url>
+    </repository>
+  </distributionManagement>
+
+  <build>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-ssh</artifactId>
+        <version>3.0.0</version>
+      </extension>
+    </extensions>
+  </build>
+        
 </project>
